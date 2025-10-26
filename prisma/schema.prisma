@@ -1,0 +1,122 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../src/generated/prisma"
+  previewFeatures = ["fullTextSearchPostgres"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+model User {
+  id            String          @id @default(uuid())
+  displayName   String          @unique
+  firstName     String
+  lastName      String
+  email         String          @unique
+  googleId      String          @unique
+  avatarUrl     String?
+  password      String?
+  role          UserRole        @default(USER)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  UserWorkspace UserWorkspace[]
+  VMActionLog   VMActionLog[]
+}
+
+model Workspace {
+  id        String   @id @default(uuid())
+  name      String
+  planId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users              UserWorkspace[]
+  ProviderCredential ProviderCredential[]
+  VirtualMachine     VirtualMachine[]
+
+  @@unique([name])
+}
+
+model UserWorkspace {
+  id          String        @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(MEMBER)
+
+  user      User      @relation(fields: [userId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([userId, workspaceId])
+}
+
+enum WorkspaceRole {
+  OWNER
+  ADMIN
+  MEMBER
+}
+
+model Provider {
+  id        String   @id @default(uuid())
+  name      String // aws, digitalocean, proxmox, vmware
+  type      String // cloud, local, etc
+  apiUrl    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  credentials ProviderCredential[]
+  machines    VirtualMachine[]
+}
+
+model ProviderCredential {
+  id          String   @id @default(uuid())
+  providerId  String
+  workspaceId String
+  name        String
+  data        Json // tokens, keys, etc
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  provider  Provider  @relation(fields: [providerId], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([providerId, workspaceId, name])
+}
+
+model VirtualMachine {
+  id          String   @id @default(uuid())
+  providerId  String
+  workspaceId String
+  name        String
+  status      String // running, stopped, etc
+  ipAddress   String?
+  region      String?
+  size        String?
+  os          String?
+  externalId  String // id no provider
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  provider    Provider      @relation(fields: [providerId], references: [id])
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id])
+  VMActionLog VMActionLog[]
+}
+
+model VMActionLog {
+  id        String   @id @default(uuid())
+  vmId      String
+  userId    String
+  action    String // create, start, stop, delete
+  status    String // success, error
+  message   String?
+  createdAt DateTime @default(now())
+
+  vm   VirtualMachine @relation(fields: [vmId], references: [id])
+  user User           @relation(fields: [userId], references: [id])
+}
