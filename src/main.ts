@@ -14,7 +14,7 @@ async function bootstrap() {
     logger: getCustomLogger('APP'),
   });
   useRequestLogging(app);
-  app.setGlobalPrefix('ecoa/v1');
+  app.setGlobalPrefix('cpme/v1');
 
   const configService = app.get(ConfigService);
   const cookieSecret = configService.getOrThrow<string>('cookie.secret');
@@ -48,7 +48,7 @@ async function bootstrap() {
 
   await app.listen(port, host);
   Logger.log(
-    `Application is running on: http://${host}:${port}/ecoa/v1`,
+    `Application is running on: http://${host}:${port}/cpme/v1`,
     'Bootstrap',
   );
 }

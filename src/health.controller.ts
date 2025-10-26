@@ -5,18 +5,24 @@ import {
   HttpHealthIndicator,
 } from '@nestjs/terminus';
 
-@Controller('health')
+@Controller('maintence')
 export class HealthController {
   constructor(
     private health: HealthCheckService,
     private http: HttpHealthIndicator,
   ) {}
 
-  @Get()
+  @Get('health')
   @HealthCheck()
   check() {
+    return 'liveness';
+  }
+
+  @Get('readness')
+  @HealthCheck()
+  readness() {
     return this.health.check([
-      () => this.http.pingCheck('ecoa', 'https://google.com'),
+      () => this.http.pingCheck('cpme', 'https://google.com'),
     ]);
   }
 }

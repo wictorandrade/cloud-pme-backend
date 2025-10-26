@@ -1,4 +1,4 @@
-const cookieNamePrefix = process.env.COOKIE_NAME_PREFIX || 'ecoa';
+const cookieNamePrefix = process.env.COOKIE_NAME_PREFIX || 'cpme';
 
 export function configuration() {
   return {
